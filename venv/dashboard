@@ -1,0 +1,70 @@
+import base64
+import io
+import datetime
+
+import dash
+from dash.dependencies import Input, Output
+import dash_core_components as dcc
+import dash_html_components as html
+import dash_table_experiments as dt
+import plotly.graph_objs as go
+
+import pandas as pd
+
+app = dash.Dash()
+
+app.scripts.config.serve_locally = True
+
+app.layout = html.Div([
+    dcc.Upload(
+        id='upload-data',
+        children=html.Div([
+            'Drag and drop or ',
+            html.A('Select files')
+            ]),
+        style={
+            'width' : '100%',
+            'height': '60px',
+            'lineHeight':'60px',
+            'borderWidth':'1px',
+            'borderStyle':'dashed',
+            'borderRadius':'5px',
+            'textAlign':'center',
+            'margin':'10px'
+        },
+
+        multiple=True
+        ),
+    dcc.Dropdown(
+        id='graph-type',
+        options=[
+            {'label': 'Bar Graph', 'value': 'bar-graph'},
+            {'label': 'Line Graph', 'value': 'line-graph'},
+            {'label': 'Area Plot', 'value': 'area-plot'}]),
+
+    dt.DataTable(
+        rows='',
+        
+    )
+
+@app.callback(
+    Output('graphs', 'children'),
+    [Input('graph-type', 'value'),
+     Input('upload-data', 'contents')])
+def update_output(graph_type, contents):
+    df = pd.read_csv(io.StringIO(contents.decode('utf-8')))
+
+    if graph_type == 'bar-graph':
+        return go.Bar(
+
+        )
+
+
+
+
+app.css.append_css({
+    'external_url': 'http://codepen.io/chriddyp/pen/bWLwgP.css'
+})
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
