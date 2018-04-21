@@ -6,8 +6,9 @@ import dash
 from dash.dependencies import Input, Output
 import dash_core_components as dcc
 import dash_html_components as html
-import dash_table_experiments as dt
 import plotly.graph_objs as go
+import dash_table_experiments as dt
+import plotly.plotly as py
 
 import pandas as pd
 
@@ -15,9 +16,8 @@ app = dash.Dash()
 
 app.scripts.config.serve_locally = True
 
-df = pd.read_csv("https://github.com/TabrynP/python-dashboard/blob/master/data.csv", encoding='utf8', engine='python')
+df = pd.read_excel("https://github.com/TabrynP/python-dashboard/blob/master/data.xlsx")
 
-df.head()
 
 app.layout = html.Div([
     dcc.Dropdown(
@@ -27,11 +27,10 @@ app.layout = html.Div([
             {'label': 'Line Graph', 'value': 'line-graph'},
             {'label': 'Area Plot', 'value': 'area-plot'}],
         value='area-plot'),
-
-    dt.DataTable(
+    html.Div(
         id='data_table',
         rows=df['DATE'],
-        cols=df['TMAX']
+        colums=df['TMAX']
     ),
     html.Div(id='output')])
 
