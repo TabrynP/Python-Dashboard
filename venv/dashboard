@@ -1,6 +1,3 @@
-import base64
-import io
-import datetime
 
 import dash
 from dash.dependencies import Input, Output
@@ -8,16 +5,14 @@ import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objs as go
 import dash_table_experiments as dt
-import plotly.plotly as py
 
 import pandas as pd
+
+df = pd.read_csv('https://raw.githubusercontent.com/TabrynP/python-dashboard/master/data.csv')
 
 app = dash.Dash()
 
 app.scripts.config.serve_locally = True
-
-df = pd.read_excel("https://github.com/TabrynP/python-dashboard/blob/master/data.xlsx")
-
 
 app.layout = html.Div([
     dcc.Dropdown(
@@ -26,42 +21,88 @@ app.layout = html.Div([
             {'label': 'Bar Graph', 'value': 'bar-graph'},
             {'label': 'Line Graph', 'value': 'line-graph'},
             {'label': 'Area Plot', 'value': 'area-plot'}],
-        value='area-plot'),
+        value=''),
+
+    html.Div(id='output'),
+
     html.Div(
-        id='data_table',
-        rows=df['DATE'],
-        colums=df['TMAX']
-    ),
-    html.Div(id='output')])
+        dt.DataTable(
+            id='data_table',
+            rows=df.to_dict('records'),
+            columns=sorted(df.columns),
+            row_selectable=True,
+            filterable=True,
+            sortable=True,
+            selected_row_indices=[],
+        )
+    )])
 
 
 @app.callback(
     Output('output', 'children'),
     [Input('graph-type', 'value'),
-     Input('data_table', 'rows'),
-     Input('data_table', 'cols')])
-def update_output(graph_type, table_rows, table_columns):
+     Input('data_table', 'rows')])
+def update_output(graph_type, rows):
+    dff = pd.DataFrame(rows)
     if graph_type == 'bar-graph':
-        return html.Div(
-            go.Bar(
-                x=table_rows,
-                y=table_columns
+        children = [
+            html.Div(
+                dcc.Graph(
+                    figure=go.Figure(
+                        data=[
+                            go.Bar(
+                                x=dff['DATE'],
+                                y=dff['TMAX']
+                            )
+                        ],
+                        layout=go.Layout(
+                            title='Bar Chart of Max Temp vs. Date'
+                        )
+                    ),
+                    id='bar'
+                ),
             )
-        )
+        ]
     elif graph_type == 'line-graph':
-        return html.Div(
-            go.Line(
-                x=table_rows,
-                y=table_columns
+        children = [
+            html.Div(
+                dcc.Graph(
+                    figure=go.Figure(
+                        data=[
+                            go.Scatter(
+                                x=dff['DATE'],
+                                y=dff['TMAX']
+                            )
+                        ],
+                        layout=go.Layout(
+                            title='Line Graph of Max Temp vs Date'
+                        )
+                    ),
+                    id='line'
+                ),
             )
-        )
+        ]
     else:
-        return html.Div(
-            go.Area(
-                x=table_rows,
-                y=table_columns
+        children = [
+            html.Div(
+                dcc.Graph(
+                    figure=go.Figure(
+                        data=[
+                            go.Scatter(
+                                x=dff['DATE'],
+                                y=dff['TMAX'],
+                                fill='tonexty'
+                            )
+                        ],
+                        layout=go.Layout(
+                            title='Area Plot of Max Temp. vs Date'
+                        )
+                    ),
+                    id='area'
+                ),
             )
-        )
+        ]
+    return children
 
 
 app.css.append_css({
